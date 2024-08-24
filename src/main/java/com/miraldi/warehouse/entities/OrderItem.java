@@ -13,11 +13,13 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@SQLRestriction("deleted=false")
 @Table(name="order_item")
 public class OrderItem {
 
@@ -36,5 +38,8 @@ public class OrderItem {
 
     @Column(name = "requested_quantity", nullable = false)
     @NotNull
-    private int requestedQuantity;
+    private Integer requestedQuantity;
+
+    @Column(name="deleted")
+    private boolean deleted;
 }

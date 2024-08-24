@@ -9,7 +9,5 @@ CREATE TABLE user (
                        city VARCHAR(255),
                        postalCode INT CHECK (postalCode >= 1000 AND postalCode <= 999999),
                        country VARCHAR(255) NOT NULL,
-                       securityQuestion VARCHAR(255) NOT NULL,
-                       answerOfQuestion VARCHAR(255) NOT NULL,
-                       disabled BOOLEAN NOT NULL
+                       deleted BOOLEAN NOT NULL
 );

@@ -5,12 +5,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
@@ -20,6 +21,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
+@SQLRestriction("deleted=false")
 @Table(name="inventory_item")
 public class InventoryItem {
 
@@ -34,12 +36,15 @@ public class InventoryItem {
 
     @Column(name = "quantity", nullable = false)
     @NotNull
-    private int quantity;
+    private Integer quantity;
 
     @Column(name = "unit_price", nullable = false)
     @NotNull
     private BigDecimal unitPrice;
 
-    @ManyToMany(mappedBy = "items")
-    private Set<Order> orders = new HashSet<>();
+    @Column(name="deleted")
+    private boolean deleted;
+
+    @OneToMany(mappedBy = "inventoryItem")
+    private Set<OrderItem> orderItems = new HashSet<>();
 }

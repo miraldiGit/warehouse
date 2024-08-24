@@ -15,11 +15,13 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
 @Data
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
+@SQLRestriction("deleted=false")
 @Table(name="user")
 public class User {
 
@@ -59,21 +61,12 @@ public class User {
     @Column(name = "postalCode")
     @Min(1000)
     @Max(999999)
-    private int postalCode;
+    private Integer postalCode;
 
     @Column(name = "country", nullable = false)
     @NotNull
     private String country;
 
-    @Column(name = "securityQuestion", nullable = false)
-    @NotNull
-    private String securityQuestion;
-
-    @Column(name = "answerOfQuestion", nullable = false)
-    @NotNull
-    private String answerOfQuestion;
-
-    @Column(name = "disabled", nullable = false)
-    @NotNull
-    private boolean disabled;
+    @Column(name = "deleted", nullable = false)
+    private boolean deleted;
 }

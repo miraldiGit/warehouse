@@ -13,11 +13,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -28,6 +30,7 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@SQLRestriction("deleted=false")
 @Table(name="order")
 public class Order {
 
@@ -49,17 +52,15 @@ public class Order {
     @NotNull
     private LocalDate deadlineDate;
 
+    @Column(name="deleted")
+    private boolean deleted;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToMany
-    @JoinTable(
-            name = "order_item",
-            joinColumns = @JoinColumn(name = "order_number"),
-            inverseJoinColumns = @JoinColumn(name = "item_id")
-    )
-    private Set<InventoryItem> items = new HashSet<>();
+    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
+    private Set<OrderItem> orderItems = new HashSet<>();
 
     @ManyToMany
     @JoinTable(
