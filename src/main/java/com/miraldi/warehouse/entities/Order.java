@@ -1,6 +1,7 @@
 package com.miraldi.warehouse.entities;
 
 import com.miraldi.warehouse.utils.Status;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -31,26 +32,27 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @SQLRestriction("deleted=false")
-@Table(name="order")
+@Table(name="t_order")
 public class Order {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_number")
     private Long orderNumber;
 
-    @Column(name = "submitted_date", nullable = false)
-    @NotNull
+    @Column(name = "submitted_date")
     private LocalDate submittedDate;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     @NotNull
-    private Status status;
+    private Status status = Status.CREATED;
 
-    @Column(name = "deadline_date", nullable = false)
-    @NotNull
+    @Column(name = "deadline_date")
     private LocalDate deadlineDate;
+
+    @Column(name = "declined_reason")
+    private String declinedReason;
 
     @Column(name="deleted")
     private boolean deleted;
@@ -59,12 +61,12 @@ public class Order {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<OrderItem> orderItems = new HashSet<>();
 
     @ManyToMany
     @JoinTable(
-            name = "order_truck",
+            name = "t_order_truck",
             joinColumns = @JoinColumn(name = "order_number"),
             inverseJoinColumns = @JoinColumn(name = "truck_id")
     )

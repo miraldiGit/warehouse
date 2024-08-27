@@ -9,38 +9,28 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLRestriction;
+
+import java.time.LocalDate;
 
 @Entity
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-@SQLRestriction("deleted=false")
-@Table(name="t_order_item")
-public class OrderItem {
+@NoArgsConstructor
+@Table(name = "t_truck_booking_date")
+public class TruckBookingDate {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "id", nullable = false)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_number", nullable = false)
-    private Order order;
+    @JoinColumn(name = "truck_id", nullable = false)
+    private Truck truck;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "inventory_item_id", nullable = false)
-    private InventoryItem inventoryItem;
-
-    @Column(name = "requested_quantity", nullable = false)
-    @NotNull
-    private Integer requestedQuantity;
-
-    @Column(name="deleted")
-    private boolean deleted;
-
+    @Column(name = "booking_date", nullable = false)
+    private LocalDate bookingDate;
 }

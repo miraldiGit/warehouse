@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,15 +23,15 @@ import java.util.Set;
 @AllArgsConstructor
 @Data
 @SQLRestriction("deleted=false")
-@Table(name="inventory_item")
+@Table(name="t_inventory_item")
 public class InventoryItem {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "item_name", nullable = false)
+    @Column(name = "item_name", unique = true, nullable = false)
     @NotNull
     private String itemName;
 
@@ -40,6 +41,7 @@ public class InventoryItem {
 
     @Column(name = "unit_price", nullable = false)
     @NotNull
+    @DecimalMin("0.01")
     private BigDecimal unitPrice;
 
     @Column(name="deleted")

@@ -21,8 +21,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import static com.miraldi.warehouse.utils.PathsAndStrings.BASE_TRUCK_PATH;
+import static com.miraldi.warehouse.utils.PathsAndStrings.TRUCK_PATH_VARIABLE;
+
 @RestController
-@RequestMapping("/api/truck")
+@RequestMapping(BASE_TRUCK_PATH)
 public class TruckController {
 
     private final ServiceTruck serviceTruck;
@@ -53,8 +56,8 @@ public class TruckController {
         requestFilter.setItemsQuantityInTruck(itemsQuantityInTruck);
         requestFilter.setDelivered(delivered);
 
-        Sort sortByItemsQuantityInTruck = Sort.by(new Sort.Order(sortDirection, sortBy));
-        Pageable pageRequest = pageableUtil.getPageable(pageable, sortByItemsQuantityInTruck);
+        Sort sort = Sort.by(new Sort.Order(sortDirection, sortBy));
+        Pageable pageRequest = pageableUtil.getPageable(pageable, sort);
         return serviceTruck.searchTrucks(requestFilter, pageRequest);
     }
 
@@ -64,14 +67,14 @@ public class TruckController {
         return serviceTruck.createTruck(createTruckDto);
     }
 
-    @PutMapping("/{truck-id}")
+    @PutMapping(TRUCK_PATH_VARIABLE)
     @ResponseStatus(HttpStatus.OK)
     public void updateTruck(@PathVariable("truck-id") Long truckId,
                             @RequestBody UpdateTruckDto updateTruckDto) {
         serviceTruck.updateTruck(truckId, updateTruckDto);
     }
 
-    @DeleteMapping("/{truck-id}")
+    @DeleteMapping(TRUCK_PATH_VARIABLE)
     public void deleteTruck(@PathVariable("truck-id") Long truckId) {
         serviceTruck.deleteTruck(truckId);
     }

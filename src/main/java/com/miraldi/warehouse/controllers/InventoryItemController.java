@@ -21,8 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 
+import static com.miraldi.warehouse.utils.PathsAndStrings.BASE_INVENTORY_ITEM_PATH;
+import static com.miraldi.warehouse.utils.PathsAndStrings.INVENTORY_ITEM_PATH_VARIABLE;
+
 @RestController
-@RequestMapping("/api/inventory-item")
+@RequestMapping(BASE_INVENTORY_ITEM_PATH)
 public class InventoryItemController {
 
     private final ServiceInventoryItem serviceInventoryItem;
@@ -51,8 +54,8 @@ public class InventoryItemController {
         requestFilter.setQuantity(quantity);
         requestFilter.setUnitPrice(unitPrice);
 
-        Sort sortByItemName = Sort.by(new Sort.Order(sortDirection, sortBy));
-        Pageable pageRequest = pageableUtil.getPageable(pageable, sortByItemName);
+        Sort sort = Sort.by(new Sort.Order(sortDirection, sortBy));
+        Pageable pageRequest = pageableUtil.getPageable(pageable, sort);
         return serviceInventoryItem.searchInventoryItems(requestFilter, pageRequest);
 
     }
@@ -63,14 +66,14 @@ public class InventoryItemController {
         return serviceInventoryItem.createInventoryItem(inventoryItemDto);
     }
 
-    @PutMapping("/{inventory-item-id}")
+    @PutMapping(INVENTORY_ITEM_PATH_VARIABLE)
     @ResponseStatus(HttpStatus.OK)
     public void updateInventoryItem(@PathVariable("inventory-item-id") Long inventoryItemId,
                                     @Valid @RequestBody InventoryItemDto inventoryItemDto) {
         serviceInventoryItem.updateInventoryItem(inventoryItemId, inventoryItemDto);
     }
 
-    @DeleteMapping("/{inventory-item-id}")
+    @DeleteMapping(INVENTORY_ITEM_PATH_VARIABLE)
     public void deleteInventoryItem(@PathVariable("inventory-item-id") Long inventoryItemId) {
         serviceInventoryItem.deleteInventoryItem(inventoryItemId);
     }

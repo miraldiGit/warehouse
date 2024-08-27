@@ -7,5 +7,4 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper=true)
 public class TruckDto extends CreateTruckDto{
     private Integer itemsQuantityInTruck;
-    private Boolean delivered;
 }

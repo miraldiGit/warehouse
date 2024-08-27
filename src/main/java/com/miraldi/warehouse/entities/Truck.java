@@ -1,11 +1,13 @@
 package com.miraldi.warehouse.entities;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -21,11 +23,11 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @SQLRestriction("deleted=false")
-@Table(name="truck")
+@Table(name="t_truck")
 public class Truck {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 
@@ -41,13 +43,12 @@ public class Truck {
     @NotNull
     private Integer itemsQuantityInTruck;
 
-    @Column(name = "delivered", nullable = false)
-    @NotNull
-    private Boolean delivered = false;
-
     @Column(name="deleted")
     private boolean deleted;
 
     @ManyToMany(mappedBy = "trucks")
     private Set<Order> orders = new HashSet<>();
+
+    @OneToMany(mappedBy = "truck", cascade = CascadeType.ALL)
+    private Set<TruckBookingDate> bookingDates = new HashSet<>();
 }

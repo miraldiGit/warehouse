@@ -1,4 +1,4 @@
-CREATE TABLE user (
+CREATE TABLE t_user (
                        id BIGINT PRIMARY KEY,
                        role ENUM('CLIENT', 'WAREHOUSE_MANAGER', 'SYSTEM_ADMIN') NOT NULL,
                        username VARCHAR(255) UNIQUE NOT NULL,
