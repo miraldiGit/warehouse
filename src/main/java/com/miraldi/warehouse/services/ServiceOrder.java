@@ -5,12 +5,15 @@ import com.miraldi.warehouse.dto.converter.OrderItemConverter;
 import com.miraldi.warehouse.dto.orderDto.BasicOrderDto;
 import com.miraldi.warehouse.dto.orderDto.OrderDto;
 import com.miraldi.warehouse.dto.orderDto.OrderItemDto;
+import com.miraldi.warehouse.entities.InventoryItem;
 import com.miraldi.warehouse.entities.Order;
 import com.miraldi.warehouse.entities.OrderItem;
 import com.miraldi.warehouse.entities.Truck;
 import com.miraldi.warehouse.entities.TruckBookingDate;
 import com.miraldi.warehouse.entities.User;
+import com.miraldi.warehouse.repositories.RepositoryInventoryItem;
 import com.miraldi.warehouse.repositories.RepositoryOrder;
+import com.miraldi.warehouse.repositories.RepositoryOrderItem;
 import com.miraldi.warehouse.repositories.RepositoryTruck;
 import com.miraldi.warehouse.repositories.RepositoryUser;
 import com.miraldi.warehouse.security.SecurityUtils;
@@ -27,6 +30,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -45,9 +49,11 @@ public class ServiceOrder {
 
     private final RepositoryOrder repositoryOrder;
     private final RepositoryUser repositoryUser;
+    private final RepositoryTruck repositoryTruck;
+    private final RepositoryInventoryItem repositoryInventoryItem;
     private final OrderConverter orderConverter;
     private final OrderItemConverter orderItemConverter;
-    private final RepositoryTruck repositoryTruck;
+    private final RepositoryOrderItem repositoryOrderItem;
 
     public Page<BasicOrderDto> searchOrders(OrderRequestFilter orderRequestFilter, Pageable pageable) {
 
@@ -71,8 +77,9 @@ public class ServiceOrder {
     public List<OrderItemDto> viewOrderItems(Long orderNumber) {
 
         var order =  repositoryOrder.findByOrderNumber(orderNumber)
-                .orElseThrow(ResourceNotFoundException::new);
-        if(loggedUser().getRole().equals(Role.CLIENT) || loggedUser().getRole().equals(Role.WAREHOUSE_MANAGER)) {
+                .orElseThrow(() -> new ResourceNotFoundException("Order with number " +
+                        orderNumber + " not found"));
+        if(loggedUser().getRole().equals(Role.CLIENT)) {
             if (order.getUser().equals(loggedUser())){
                 return order.getOrderItems()
                         .stream()
@@ -82,7 +89,13 @@ public class ServiceOrder {
             else {
                 throw new AccessDeniedException("Access denied: User does not have rights to view this order item");
             }
-        } else {
+        } else if (loggedUser().getRole().equals(Role.WAREHOUSE_MANAGER)) {
+                    return order.getOrderItems()
+                            .stream()
+                            .map(orderItemConverter::convertOrderItemToOrderItemDto)
+                            .toList();
+        }
+        else {
                 throw new AccessDeniedException("Access denied: User does not have rights to view this order item");
         }
     }
@@ -90,11 +103,12 @@ public class ServiceOrder {
     @Transactional
     public BasicOrderDto createOrder(OrderDto orderDto) {
         Order order = new Order();
-        var user = loggedUser();
+        User user = loggedUser();
         order.setUser(user);
+        Order savedOrder = repositoryOrder.save(order);
 
         if (!orderDto.getOrderItems().isEmpty()) {
-            updateOrder(orderDto, order);
+            updateOrder(orderDto, savedOrder);
         }
         else {
             throw new ResourceNotFoundException("No items found");
@@ -102,11 +116,12 @@ public class ServiceOrder {
         return orderConverter.convertOrderToBasicOrderDto(order);
     }
 
+    @Transactional
     public BasicOrderDto clientUpdatesOrder(Long orderNumber, OrderDto orderDto){
         var order = repositoryOrder.findByOrderNumber(orderNumber)
-                                    .orElseThrow(ResourceNotFoundException::new);
+                                    .orElseThrow(() -> new ResourceNotFoundException("Order with number " +
+                                            orderNumber + " not found"));
         var user = loggedUser();
-
         if(order.getUser().equals(user)) {
             if (order.getStatus().equals(Status.CREATED) || order.getStatus().equals(Status.DECLINED)) {
                 updateOrder(orderDto, order);
@@ -122,7 +137,8 @@ public class ServiceOrder {
 
     public void clientSubmitsOrCancelsOrder(Long orderNumber, SubmitCancelRequest submitCancelRequest) {
         var order = repositoryOrder.findByOrderNumber(orderNumber)
-                .orElseThrow(ResourceNotFoundException::new);
+                .orElseThrow(() -> new ResourceNotFoundException("Order with number "
+                        + orderNumber + " not found"));
 
         var user = loggedUser();
 
@@ -133,16 +149,14 @@ public class ServiceOrder {
                     && submitCancelRequest.getStatus().equals(Status.CANCELED)) {
                 order.setStatus(Status.CANCELED);
                 repositoryOrder.save(order);
-            } else {
-                throw new AccessDeniedException("Access denied: Order under the current status cannot be canceled");
-            }
-            if (submitCancelRequest.getStatus().equals(Status.AWAITING_APPROVAL) &&
+            } else if (submitCancelRequest.getStatus().equals(Status.AWAITING_APPROVAL) &&
                     (order.getStatus().equals(Status.CREATED) || order.getStatus().equals(Status.DECLINED))) {
                 order.setStatus(Status.AWAITING_APPROVAL);
                 order.setSubmittedDate(LocalDate.now());
                 repositoryOrder.save(order);
-            } else {
-                throw new AccessDeniedException("Access denied: Order under the current status cannot be submitted");
+            }
+            else {
+                throw new AccessDeniedException("Access denied: Order under the current status cannot be submitted nor canceled");
             }
         }
         else {
@@ -152,7 +166,8 @@ public class ServiceOrder {
 
     public void managerApprovesOrDeclinesOrderStatus(Long orderNumber, ApproveDeclineRequest approveDeclineRequest) {
         var order = repositoryOrder.findByOrderNumber(orderNumber)
-                .orElseThrow(ResourceNotFoundException::new);
+                .orElseThrow(() -> new ResourceNotFoundException("Order with number "
+                        + orderNumber + " not found"));
 
         if (loggedUser().getRole().equals(Role.WAREHOUSE_MANAGER)) {
             if (order.getStatus().equals(Status.AWAITING_APPROVAL) &&
@@ -167,16 +182,18 @@ public class ServiceOrder {
                 repositoryOrder.save(order);
             }
             else{
-                    throw new AccessDeniedException("Access denied: Order under the current status cannot be approved/declined");
+                throw new AccessDeniedException("Access denied: Order under the current status cannot be approved or declined");
                 }
             } else {
                 throw new AccessDeniedException("Access denied: User does not have rights to update this order");
             }
         }
 
+    @Transactional
     public void managerSchedulesOrderDelivery(Long orderNumber, ScheduleDeliveryRequest scheduleDeliveryRequest) {
         var order = repositoryOrder.findByOrderNumber(orderNumber)
-                .orElseThrow(ResourceNotFoundException::new);
+                .orElseThrow(() -> new ResourceNotFoundException("Order with number "
+                        + orderNumber + " not found"));
 
         if (loggedUser().getRole().equals(Role.WAREHOUSE_MANAGER) &&
                 scheduleDeliveryRequest.getStatus().equals(Status.UNDER_DELIVERY)) {
@@ -207,10 +224,10 @@ public class ServiceOrder {
                         int quantityToAllocate = Math.min(10, remainingQuantity);
 
                         truck.setItemsQuantityInTruck(truck.getItemsQuantityInTruck() + quantityToAllocate);
-                        truckBookingDate.setTruck(truck);
                         truckBookingDate.setBookingDate(scheduleDeliveryRequest.getDeadlineDate());
                         truck.getBookingDates().add(truckBookingDate);
                         order.getTrucks().add(truck);
+                        truckBookingDate.setTruck(truck);
                         remainingQuantity -= quantityToAllocate;
 
                         if (remainingQuantity == 0) {
@@ -221,6 +238,13 @@ public class ServiceOrder {
                 if (remainingQuantity > 0) {
                     throw new IllegalStateException("Not enough truck capacity to fulfill the order");
                 }
+                Set<InventoryItem> inventoryItems = order.getOrderItems().stream()
+                        .map(orderItem -> {
+                            orderItem.getInventoryItem().decreaseQuantity(orderItem.getRequestedQuantity());
+                            return orderItem.getInventoryItem();
+                        })
+                        .collect(Collectors.toSet());
+                repositoryInventoryItem.saveAll(inventoryItems);
                 repositoryTruck.saveAll(trucks);
                 repositoryOrder.save(order);
             }
@@ -234,19 +258,19 @@ public class ServiceOrder {
 
     public void managerFulfillsOrderDelivery(Long orderNumber, FulfillOrderRequest fulfillOrderRequest){
         var order = repositoryOrder.findByOrderNumber(orderNumber)
-                        .orElseThrow(ResourceNotFoundException::new);
+                        .orElseThrow(() -> new ResourceNotFoundException("Order with number "
+                                + orderNumber + " not found"));
 
         if(loggedUser().getRole().equals(Role.WAREHOUSE_MANAGER) &&
             order.getStatus().equals(Status.UNDER_DELIVERY) &&
             fulfillOrderRequest.getStatus().equals(Status.FULFILLED)){
            order.setStatus(fulfillOrderRequest.getStatus());
+           repositoryOrder.save(order);
         }
         else {
             throw new AccessDeniedException("Access denied: User does not have rights to update this order or incorrect status of order");
         }
     }
-
-
 
     //  ┌─┐┬ ┬┌─┐┌─┐┌─┐┬─┐┌┬┐  ┌┬┐┌─┐┌┬┐┬ ┬┌─┐┌┬┐
     //  └─┐│ │├─┘├─┘│ │├┬┘ │   │││├┤  │ ├─┤│ │ ││
@@ -255,25 +279,36 @@ public class ServiceOrder {
     private void updateOrder(OrderDto orderDto,
                              Order order) {
         Set<OrderItem> orderItemSet = new HashSet<>();
+        if(order.getOrderNumber() != null) {
+            repositoryOrderItem.deleteAllByOrder(order.getOrderNumber());
+        }
+        BigDecimal orderTotalPrice = BigDecimal.ZERO;
         for (OrderItemDto orderItemDto : orderDto.getOrderItems()) {
             OrderItem orderItem = new OrderItem();
             if(orderItemDto.getInventoryItem().getQuantity() < orderItemDto.getRequestedQuantity()) {
-                throw new IncorrectDataException("Requested quantity for item " +orderItemDto.getInventoryItem().getItemName()+
+                throw new IncorrectDataException("Requested quantity for item "
+                        +orderItemDto.getInventoryItem().getItemName()+
                         "exceeds available stock " +orderItemDto.getInventoryItem().getQuantity()+ ".");
             }
             else {
+                 orderTotalPrice = orderTotalPrice.add(orderItemDto.getInventoryItem()
+                                                  .getUnitPrice()
+                                                  .multiply(BigDecimal.valueOf(orderItemDto.getRequestedQuantity())));
+                orderItemConverter.convertOrderItemDtoToOrderItem(orderItemDto, orderItem);
                 orderItem.setOrder(order);
+                repositoryOrderItem.save(orderItem);
                 orderItemSet.add(orderItem);
             }
         }
+        order.setOrderTotalPrice(orderTotalPrice);
         order.setOrderItems(orderItemSet);
         repositoryOrder.save(order);
         log.info("Order with order number {} has been updated", order.getOrderNumber());
     }
 
-    private User loggedUser(){
-        return repositoryUser.findById(SecurityUtils.loggedUser().getId())
-                .orElseThrow(ResourceNotFoundException::new);
+    public User loggedUser(){
+        return repositoryUser.findByUsernameOrEmail(SecurityUtils.loggedUser().getUsername(), SecurityUtils.loggedUser().getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     @Data

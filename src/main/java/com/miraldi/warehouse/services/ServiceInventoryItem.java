@@ -1,7 +1,9 @@
 package com.miraldi.warehouse.services;
 
 import com.miraldi.warehouse.dto.converter.InventoryItemConverter;
+import com.miraldi.warehouse.dto.inventoryItemDto.CreateInventoryItemDto;
 import com.miraldi.warehouse.dto.inventoryItemDto.InventoryItemDto;
+import com.miraldi.warehouse.dto.inventoryItemDto.UpdateInventoryItemDto;
 import com.miraldi.warehouse.entities.InventoryItem;
 import com.miraldi.warehouse.repositories.RepositoryInventoryItem;
 import lombok.AllArgsConstructor;
@@ -40,24 +42,28 @@ public class ServiceInventoryItem {
         return pageInventoryItem.map(inventoryItemConverter::convertInventoryItemToInventoryItemDto);
     }
 
-    public InventoryItemDto createInventoryItem(InventoryItemDto inventoryItemDto){
-        if(!repositoryInventoryItem.existsByItemName(inventoryItemDto.getItemName())) {
-            InventoryItem inventoryItem = repositoryInventoryItem.save(inventoryItemConverter.convertInventoryItemDtoToInventoryItem(inventoryItemDto));
+    public InventoryItemDto createInventoryItem(CreateInventoryItemDto createInventoryItemDto){
+        if(!repositoryInventoryItem.existsByItemName(createInventoryItemDto.getItemName())) {
+            InventoryItem inventoryItem =
+                    repositoryInventoryItem.save(
+                        inventoryItemConverter.convertCreateInventoryItemDtoToInventoryItem(createInventoryItemDto)
+                    );
             return inventoryItemConverter.convertInventoryItemToInventoryItemDto(inventoryItem);
         }
         else throw new IncorrectDataException("An inventory item with the same item name already exists.");
     }
 
-    public void updateInventoryItem(Long inventoryItemId, InventoryItemDto inventoryItemDto){
+    public void updateInventoryItem(Long inventoryItemId, UpdateInventoryItemDto updateInventoryItemDto){
         var inventoryItem = repositoryInventoryItem.findById(inventoryItemId)
-                .orElseThrow(ResourceNotFoundException::new);
+                .orElseThrow(() -> new ResourceNotFoundException("Inventory item with id: "
+                        +inventoryItemId+ " not found"));
 
-        if(inventoryItemDto.getItemName() != null &&
-           inventoryItemDto.getQuantity() != null &&
-           inventoryItemDto.getUnitPrice() != null &&
-           inventoryItemDto.getQuantity() >= 0 &&
-           inventoryItemDto.getUnitPrice().compareTo(BigDecimal.ZERO) > 0){
-            inventoryItem = inventoryItemConverter.convertInventoryItemDtoToInventoryItem(inventoryItemDto);
+        if(updateInventoryItemDto.getItemName() != null &&
+           updateInventoryItemDto.getQuantity() != null &&
+           updateInventoryItemDto.getUnitPrice() != null &&
+           updateInventoryItemDto.getQuantity() >= 0 &&
+           updateInventoryItemDto.getUnitPrice().compareTo(BigDecimal.ZERO) > 0){
+            inventoryItemConverter.convertUpdateInventoryItemDtoToInventoryItem(updateInventoryItemDto, inventoryItem);
             repositoryInventoryItem.save(inventoryItem);
         }
         else throw new IncorrectDataException("An inventory item must not have fields as null and/or " +
@@ -66,7 +72,8 @@ public class ServiceInventoryItem {
 
     public void deleteInventoryItem(Long inventoryItemId){
         var inventoryItem = repositoryInventoryItem.findById(inventoryItemId)
-                .orElseThrow(ResourceNotFoundException::new);
+                .orElseThrow(() -> new ResourceNotFoundException("Inventory item with id: "
+                        +inventoryItemId+ " not found"));
         inventoryItem.setDeleted(true);
         repositoryInventoryItem.save(inventoryItem);
     }

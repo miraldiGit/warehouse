@@ -13,14 +13,18 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.SQLRestriction;
 
-@Data
+import java.util.Objects;
+
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 @SQLRestriction("deleted=false")
 @Table(name="t_user")
 public class User {
@@ -43,11 +47,11 @@ public class User {
     @NotNull
     private String password;
 
-    @Column(name = "lastName", nullable = false)
+    @Column(name = "last_name", nullable = false)
     @NotNull
     private String lastName;
 
-    @Column(name = "firstName", nullable = false)
+    @Column(name = "first_name", nullable = false)
     @NotNull
     private String firstName;
 
@@ -58,7 +62,7 @@ public class User {
     @Column(name = "city")
     private String city;
 
-    @Column(name = "postalCode")
+    @Column(name = "postal_code")
     @Min(1000)
     @Max(999999)
     private Integer postalCode;
@@ -69,4 +73,16 @@ public class User {
 
     @Column(name = "deleted", nullable = false)
     private boolean deleted;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User user)) return false;
+        return Objects.equals(id, user.id) && Objects.equals(username, user.username) && Objects.equals(email, user.email);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, username, email);
+    }
 }

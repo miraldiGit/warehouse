@@ -32,8 +32,7 @@ public class SpecificationTruck {
     }
 
     public static Specification<Truck> hasItemsQuantityInTruck(Integer itemsQuantityInTruck) {
-        var convertedNumber = String.valueOf(itemsQuantityInTruck);
-        if (checkNull(convertedNumber)) {
+        if (itemsQuantityInTruck == null) {
             return noOperator();
         }
         return (root, query, criteriaBuilder) ->

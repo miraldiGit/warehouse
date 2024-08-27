@@ -86,12 +86,12 @@ public class ServiceUser implements UserDetailsService {
     }
 
     public void updateUser(Long id, UpdateUserDto updateUserDto) {
-        var user = repositoryUser.findById(id).orElseThrow(ResourceNotFoundException::new);
+        var user = repositoryUser.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         if(updateUserDto.getLastName() != null &&
            updateUserDto.getFirstName() != null &&
            updateUserDto.getCountry() != null &&
            updateUserDto.getPostalCode()>=1000 && updateUserDto.getPostalCode()<=999999){
-            user = userConverter.convertUpdateUserDtoToUser(updateUserDto);
+           userConverter.convertUpdateUserDtoToUser(updateUserDto, user);
             repositoryUser.save(user);
         }
         else{
@@ -104,7 +104,7 @@ public class ServiceUser implements UserDetailsService {
         var user = repositoryUser.findByUsernameOrEmail(
                 changeUserPasswordDto.getUsernameOrEmail(),
                 changeUserPasswordDto.getUsernameOrEmail())
-                .orElseThrow(ResourceNotFoundException::new);
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (SecurityUtils.loggedUser().getUsername().equals(changeUserPasswordDto.getUsernameOrEmail())
                 || SecurityUtils.loggedUser().getEmail().equals(changeUserPasswordDto.getUsernameOrEmail())) {

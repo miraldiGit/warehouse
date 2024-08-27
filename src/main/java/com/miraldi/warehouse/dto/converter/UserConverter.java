@@ -5,6 +5,7 @@ import com.miraldi.warehouse.dto.userDto.UpdateUserDto;
 import com.miraldi.warehouse.dto.userDto.UserDetailsDto;
 import com.miraldi.warehouse.entities.User;
 import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
 
 @Mapper
 public interface UserConverter {
@@ -12,10 +13,8 @@ public interface UserConverter {
 
     UserDetailsDto convertUserToUserDetailsDto(User user);
 
-    User convertUserDetailsDtoToUser(UserDetailsDto userDetailsDto);
-
     User convertCreateUserDtoToUser(CreateUserDto createUserDto);
 
-    User convertUpdateUserDtoToUser(UpdateUserDto updateUserDto);
+    void convertUpdateUserDtoToUser(UpdateUserDto updateUserDto, @MappingTarget User user);
 
 }

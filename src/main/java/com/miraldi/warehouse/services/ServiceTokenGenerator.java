@@ -32,10 +32,10 @@ public class ServiceTokenGenerator {
                                        HttpServletResponse response,
                                        CustomUserDetails user) throws IOException {
 
-        String access_token = tokenCreator(user.getUsername(),60000000,request,
+        String access_token = tokenCreator(user.getUsername(),600000,request,
                 user.getRole().name(),String.valueOf(user.getId()),user.getEmail());
 
-        String refresh_token = tokenCreator(user.getUsername(), 6000000, request,
+        String refresh_token = tokenCreator(user.getUsername(), 604800000, request,
                 user.getRole().name(), String.valueOf(user.getId()), user.getEmail());
 
         Map<String, String> tokens = new HashMap<>();
@@ -96,9 +96,9 @@ public class ServiceTokenGenerator {
                 .withSubject(username)
                 .withExpiresAt(new Date(System.currentTimeMillis() + durationTime ))
                 .withIssuer(request.getRequestURL().toString())
-                .withClaim(role, role)
-                .withClaim(id, id)
-                .withClaim(email, email)
+                .withClaim("role", role)
+                .withClaim("id", id)
+                .withClaim("email", email)
                 .sign(Algorithm.HMAC256("secret".getBytes()));
     }
 }

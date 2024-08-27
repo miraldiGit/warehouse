@@ -1,8 +1,13 @@
 package com.miraldi.warehouse.controllers;
 
+import com.miraldi.warehouse.dto.inventoryItemDto.CreateInventoryItemDto;
 import com.miraldi.warehouse.dto.inventoryItemDto.InventoryItemDto;
+import com.miraldi.warehouse.dto.inventoryItemDto.UpdateInventoryItemDto;
 import com.miraldi.warehouse.services.ServiceInventoryItem;
 import com.miraldi.warehouse.utils.PageableUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +29,7 @@ import java.math.BigDecimal;
 import static com.miraldi.warehouse.utils.PathsAndStrings.BASE_INVENTORY_ITEM_PATH;
 import static com.miraldi.warehouse.utils.PathsAndStrings.INVENTORY_ITEM_PATH_VARIABLE;
 
+@Tag(name = "Inventory Items Controller", description = "Operations related to inventory items management")
 @RestController
 @RequestMapping(BASE_INVENTORY_ITEM_PATH)
 public class InventoryItemController {
@@ -39,14 +45,17 @@ public class InventoryItemController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Page<InventoryItemDto> searchInventoryItems(@RequestParam(value="item-name", required = false)
+    @Operation(summary = "Search for inventory items", description = "Filter and sort inventory items based on different fields." +
+            "They are sorted by default by the item name")
+    @ApiResponse(responseCode = "200", description = "Successfully retrieved inventory items")
+    public Page<InventoryItemDto> searchInventoryItems(@RequestParam(value="itemName", required = false)
                                                        String itemName,
                                                        @RequestParam(value="quantity", required = false)
                                                        Integer quantity,
-                                                       @RequestParam(value="unit-price", required = false)
+                                                       @RequestParam(value="unitPrice", required = false)
                                                        BigDecimal unitPrice,
-                                                       @RequestParam(value = "sort-by", defaultValue = "itemName") String sortBy,
-                                                       @RequestParam(value="sort-direction", defaultValue = "ASC") Sort.Direction sortDirection,
+                                                       @RequestParam(value = "sortBy", defaultValue = "itemName") String sortBy,
+                                                       @RequestParam(value="sortDirection", defaultValue = "ASC") Sort.Direction sortDirection,
                                                        Pageable pageable) {
 
         var requestFilter = new ServiceInventoryItem.InventoryItemFilter();
@@ -62,18 +71,23 @@ public class InventoryItemController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public InventoryItemDto addInventoryItem(@Valid @RequestBody InventoryItemDto inventoryItemDto) {
-        return serviceInventoryItem.createInventoryItem(inventoryItemDto);
+    @Operation(summary = "Create inventory item", description = "Created an inventory item")
+    @ApiResponse(responseCode = "201", description = "Successfully retrieved orders")
+    public InventoryItemDto addInventoryItem(@Valid @RequestBody CreateInventoryItemDto createInventoryItemDto) {
+        return serviceInventoryItem.createInventoryItem(createInventoryItemDto);
     }
 
     @PutMapping(INVENTORY_ITEM_PATH_VARIABLE)
     @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Update inventory item", description = "Update an inventory item")
+    @ApiResponse(responseCode = "200", description = "Successfully updated inventory item")
     public void updateInventoryItem(@PathVariable("inventory-item-id") Long inventoryItemId,
-                                    @Valid @RequestBody InventoryItemDto inventoryItemDto) {
-        serviceInventoryItem.updateInventoryItem(inventoryItemId, inventoryItemDto);
+                                    @Valid @RequestBody UpdateInventoryItemDto updateInventoryItemDto) {
+        serviceInventoryItem.updateInventoryItem(inventoryItemId, updateInventoryItemDto);
     }
 
     @DeleteMapping(INVENTORY_ITEM_PATH_VARIABLE)
+    @Operation(summary = "Delete inventory item", description = "Deleted an inventory item")
     public void deleteInventoryItem(@PathVariable("inventory-item-id") Long inventoryItemId) {
         serviceInventoryItem.deleteInventoryItem(inventoryItemId);
     }

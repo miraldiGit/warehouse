@@ -14,6 +14,9 @@ import java.util.Optional;
 @Repository
 public interface RepositoryTruck extends JpaRepository<Truck, Long> {
 
+    @EntityGraph(attributePaths = {
+            "bookingDates"
+    })
     Optional<Truck> findById(Long id);
 
     Page<Truck> findAll(Specification<Truck> spec, Pageable pageable);

@@ -1,11 +1,14 @@
 package com.miraldi.warehouse.services;
 
 import com.miraldi.warehouse.dto.converter.TruckConverter;
+import com.miraldi.warehouse.dto.truckBookingDate.TruckBookingDateDto;
 import com.miraldi.warehouse.dto.truckDto.CreateTruckDto;
 import com.miraldi.warehouse.dto.truckDto.TruckDto;
 import com.miraldi.warehouse.dto.truckDto.UpdateTruckDto;
 import com.miraldi.warehouse.entities.Truck;
+import com.miraldi.warehouse.entities.TruckBookingDate;
 import com.miraldi.warehouse.repositories.RepositoryTruck;
+import com.miraldi.warehouse.repositories.RepositoryTruckBookingDate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,6 +17,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static com.miraldi.warehouse.repositories.specifications.SpecificationTruck.hasChassisNumberLike;
 import static com.miraldi.warehouse.repositories.specifications.SpecificationTruck.hasDelivered;
@@ -27,6 +33,7 @@ public class ServiceTruck {
 
     private final RepositoryTruck repositoryTruck;
     private final TruckConverter truckConverter;
+    private final RepositoryTruckBookingDate repositoryTruckBookingDate;
 
     public Page<TruckDto> searchTrucks(TruckRequestFilter truckRequestFilter, Pageable pageable) {
 
@@ -54,12 +61,22 @@ public class ServiceTruck {
 
     public void updateTruck(Long truckId, UpdateTruckDto updateTruckDto){
         var truck = repositoryTruck.findById(truckId)
-                .orElseThrow(ResourceNotFoundException::new);
+                .orElseThrow(() -> new ResourceNotFoundException("Truck with id: "+truckId +" not found"));
 
         if(updateTruckDto.getItemsQuantityInTruck() != null &&
-           updateTruckDto.getItemsQuantityInTruck() >=0 &&
-           updateTruckDto.getDelivered() != null){
-            truck = truckConverter.convertUpdateTruckDtoToTruck(updateTruckDto);
+           updateTruckDto.getItemsQuantityInTruck() >=0){
+            Set<TruckBookingDate> truckBookingDateSet = new HashSet<>();
+            if(updateTruckDto.getTruckBookingDates()!=null){
+                for(TruckBookingDateDto truckBookingDateDto : updateTruckDto.getTruckBookingDates()){
+                                    TruckBookingDate truckBookingDate = new TruckBookingDate();
+                                    truckBookingDate.setBookingDate(truckBookingDateDto.getTruckBookingDate());
+                                    truckBookingDate.setTruck(truck);
+                                    repositoryTruckBookingDate.save(truckBookingDate);
+                                    truckBookingDateSet.add(truckBookingDate);
+                                }
+            }
+            truck.setItemsQuantityInTruck(updateTruckDto.getItemsQuantityInTruck());
+            truck.setBookingDates(truckBookingDateSet);
             repositoryTruck.save(truck);
         }
         else throw new IncorrectDataException("A truck must not have itemsQuantityInTruck as negative or null " +
@@ -68,7 +85,7 @@ public class ServiceTruck {
 
     public void deleteTruck(Long truckId){
         var truck = repositoryTruck.findById(truckId)
-                .orElseThrow(ResourceNotFoundException::new);
+                .orElseThrow(() -> new ResourceNotFoundException("Truck with id: "+truckId +" not found"));
         truck.setDeleted(true);
         repositoryTruck.save(truck);
     }

@@ -24,7 +24,7 @@ public class SpecificationInventoryItem {
     }
 
     public static Specification<InventoryItem> hasUnitPrice(BigDecimal unitPrice) {
-        if (checkNull(String.valueOf(unitPrice))) {
+        if (unitPrice == null) {
             return noOperator();
         }
         return (root, query, criteriaBuilder) ->
@@ -32,8 +32,7 @@ public class SpecificationInventoryItem {
     }
 
     public static Specification<InventoryItem> hasQuantity(Integer quantity) {
-        var convertedNumber = String.valueOf(quantity);
-        if (checkNull(convertedNumber)) {
+        if (quantity == null) {
             return noOperator();
         }
         return (root, query, criteriaBuilder) ->

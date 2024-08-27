@@ -18,17 +18,21 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @SQLRestriction("deleted=false")
@@ -54,6 +58,9 @@ public class Order {
     @Column(name = "declined_reason")
     private String declinedReason;
 
+    @Column(name = "order_total_price")
+    private BigDecimal orderTotalPrice;
+
     @Column(name="deleted")
     private boolean deleted;
 
@@ -71,4 +78,17 @@ public class Order {
             inverseJoinColumns = @JoinColumn(name = "truck_id")
     )
     private Set<Truck> trucks = new HashSet<>();
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Order order = (Order) o;
+        return Objects.equals(orderNumber, order.orderNumber);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(orderNumber);
+    }
 }

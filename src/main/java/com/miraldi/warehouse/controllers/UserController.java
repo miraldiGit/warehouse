@@ -11,6 +11,9 @@ import com.miraldi.warehouse.services.ServiceUser;
 import com.miraldi.warehouse.services.ServiceUser.UserRequestFilter;
 import com.miraldi.warehouse.utils.PageableUtil;
 import com.miraldi.warehouse.utils.Role;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -39,6 +42,7 @@ import static com.miraldi.warehouse.utils.PathsAndStrings.REFRESH_TOKEN_PATH;
 import static com.miraldi.warehouse.utils.PathsAndStrings.USER_PATH_VARIABLE;
 import static com.miraldi.warehouse.utils.Role.SYSTEM_ADMIN;
 
+@Tag(name = "User Controller", description = "Operations related to user management")
 @RestController
 @RequestMapping(BASE_USER_PATH)
 public class UserController {
@@ -53,26 +57,28 @@ public class UserController {
     }
 
     @GetMapping
+    @Operation(summary = "Search for users", description = "Filter and sort users based on different fields.")
+    @ApiResponse(responseCode = "200", description = "Successfully retrieved users")
     @ResponseStatus(HttpStatus.OK)
     public Page<UserDetailsDto> searchUsers(@RequestParam(value = "role", required = false)
                                             Role role,
                                             @RequestParam(value = "username", required = false)
                                             String username,
-                                            @RequestParam(value = "last-name", required = false)
+                                            @RequestParam(value = "lastName", required = false)
                                             String lastName,
-                                            @RequestParam(value = "first-name", required = false)
+                                            @RequestParam(value = "firstName", required = false)
                                             String firstName,
                                             @RequestParam(value = "email", required = false)
                                             String email,
                                             @RequestParam(value = "city", required = false)
                                             String city,
-                                            @RequestParam(value = "postal-code", required = false)
+                                            @RequestParam(value = "postalCode", required = false)
                                             Integer postalCode,
                                             @RequestParam(value = "country", required = false)
                                             String country,
-                                            @RequestParam(value = "sort-by", required = false)
+                                            @RequestParam(value = "sortBy", required = false)
                                             String sortBy,
-                                            @RequestParam(value="sort-direction", defaultValue = "ASC")
+                                            @RequestParam(value="sortDirection", defaultValue = "ASC")
                                             Sort.Direction sortDirection,
                                             Pageable pageable){
 
@@ -102,18 +108,24 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Create user", description = "Create users with different roles.")
+    @ApiResponse(responseCode = "201", description = "Successfully created user")
     public UserDetailsDto addUser(@Valid @RequestBody CreateUserDto createUserDto){
         return serviceUser.createUser(createUserDto);
     }
 
     @PutMapping(USER_PATH_VARIABLE)
     @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Update user", description = "Update a user.")
+    @ApiResponse(responseCode = "200", description = "Successfully updated user")
     public void updateUser(@PathVariable("user-id") Long userId,
                            @Valid @RequestBody UpdateUserDto updateUserDto){
         serviceUser.updateUser(userId, updateUserDto);
     }
 
     @PutMapping(CHANGE_PASSWORD_PATH)
+    @Operation(summary = "Change the user password", description = "The user can change his password.")
+    @ApiResponse(responseCode = "200", description = "Successfully changed password")
     public ResponseEntity<String> changePassword(@Valid @RequestBody ChangeUserPasswordDto changeUserPasswordDto){
         if (!(SecurityUtils.loggedUser().getUsername().equals(changeUserPasswordDto.getUsernameOrEmail())
                 || SecurityUtils.loggedUser().getEmail().equals(changeUserPasswordDto.getUsernameOrEmail()))){
@@ -125,12 +137,15 @@ public class UserController {
     }
 
     @DeleteMapping(USER_PATH_VARIABLE)
+    @Operation(summary = "Deletes a user", description = "Deletes a user.")
     public void deleteUser(@PathVariable("user-id") Long userId){
         serviceUser.deleteUser(userId);
     }
 
     @GetMapping(REFRESH_TOKEN_PATH)
     @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Refresh the token", description = "Refresh the access token.")
+    @ApiResponse(responseCode = "200", description = "Successfully refreshed token")
     public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
         ServiceTokenGenerator.refreshTokenGenerator(request, response);
     }

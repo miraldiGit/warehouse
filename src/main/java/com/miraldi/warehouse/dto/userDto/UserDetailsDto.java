@@ -6,12 +6,13 @@ import lombok.Data;
 @Data
 public class UserDetailsDto {
 
+        private Long id;
         private Role role;
         private String username;
         private String lastName;
         private String firstName;
         private String email;
         private String city;
-        private int postalCode;
+        private Integer postalCode;
         private String country;
 }

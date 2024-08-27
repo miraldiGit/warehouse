@@ -5,6 +5,7 @@ import com.miraldi.warehouse.dto.truckDto.TruckDto;
 import com.miraldi.warehouse.dto.truckDto.UpdateTruckDto;
 import com.miraldi.warehouse.entities.Truck;
 import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
 
 @Mapper
 public interface TruckConverter {
@@ -13,5 +14,5 @@ public interface TruckConverter {
 
     Truck convertCreateTruckDtoToTruck(CreateTruckDto createTruckDto);
 
-    Truck convertUpdateTruckDtoToTruck(UpdateTruckDto updateTruckDto);
+    void convertUpdateTruckDtoToTruck(UpdateTruckDto updateTruckDto, @MappingTarget Truck truck);
 }

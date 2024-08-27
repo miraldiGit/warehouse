@@ -4,13 +4,14 @@ import com.miraldi.warehouse.utils.Role;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
 public class CreateUserDto {
 
-    @NotBlank(message = "Value for field Role is missing")
+    @NotNull(message = "Value for field Role is missing")
     private Role role;
 
     @NotBlank(message="Value for field username is missing or the username provided already exists")

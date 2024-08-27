@@ -81,13 +81,12 @@ public class SpecificationUser {
     }
 
     public static Specification<User> hasPostalCode(Integer postalCode) {
-        var convertedNumber = String.valueOf(postalCode);
-        if (checkNull(convertedNumber)) {
+        if (postalCode == null) {
             return noOperator();
         }
         return (root, query, criteriaBuilder) ->
                 criteriaBuilder.equal(root.get("postalCode").as(String.class),
-                        postalCode.toString());
+                        String.valueOf(postalCode));
     }
 
     private static Specification<User> noOperator() {

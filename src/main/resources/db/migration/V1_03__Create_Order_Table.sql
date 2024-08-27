@@ -1,7 +1,7 @@
 CREATE TABLE t_order (
-                        order_number BIGINT PRIMARY KEY,
+                        order_number BIGINT PRIMARY KEY AUTO_INCREMENT,
                         submitted_date DATE,
-                        status ENUM('CREATED', 'WAITING_APPROVAL', 'APPROVED', 'DECLINED', 'UNDER_DELIVERY', 'FULFILLED', 'CANCELED') NOT NULL DEFAULT 'CREATED',
+                        status ENUM('CREATED', 'AWAITING_APPROVAL', 'APPROVED', 'DECLINED', 'UNDER_DELIVERY', 'FULFILLED', 'CANCELED') NOT NULL DEFAULT 'CREATED',
                         deadline_date DATE,
                         declined_reason TEXT,
                         user_id BIGINT NOT NULL,

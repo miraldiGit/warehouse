@@ -15,23 +15,22 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Object> handleNotFoundException() {
-        return new ResponseEntity<>("ResourceNotFoundException",
+    public ResponseEntity<Object> handleNotFoundException(ResourceNotFoundException ex) {
+        return new ResponseEntity<>("ResourceNotFoundException: " + ex.getMessage(),
                 new HttpHeaders(), HttpStatus.NOT_FOUND);
     }
 
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Object> handleIllegalArgumentException() {
+    public ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException ex) {
         return new ResponseEntity<>("IllegalArgumentException: " +
-                "Cannot delete user with username 'root' ",
+                ex.getMessage(),
                 new HttpHeaders(), HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Object> handleAccessDenied() {
-        return new ResponseEntity<>("AccessDeniedException: The user has not the proper rights " +
-                "to perform this action",
+    public ResponseEntity<Object> handleAccessDenied(AccessDeniedException ex) {
+        return new ResponseEntity<>("AccessDeniedException: " + ex.getMessage(),
                 new HttpHeaders(), HttpStatus.FORBIDDEN);
     }
 
